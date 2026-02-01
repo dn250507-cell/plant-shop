@@ -29,7 +29,11 @@ const ORDERS = {
         if (!plant) return { success: false, message: 'Không tìm thấy sản phẩm' };
         if (plant.stock < orderData.quantity) return { success: false, message: 'Số lượng trong kho không đủ' };
         if (!orderData.address || !orderData.phone) return { success: false, message: 'Vui lòng điền đầy đủ thông tin' };
+        if (orderData.address.length < 15) return { success: false, message: 'Địa chỉ quá ngắn. Vui lòng ghi rõ số nhà, tên đường, xã/phường...' };
         if (orderData.phone.length < 10) return { success: false, message: 'Số điện thoại không hợp lệ' };
+
+        const user = AUTH.getCurrentUser();
+        if (!user) return { success: false, message: 'Vui lòng đăng nhập để đặt hàng' };
 
         try {
             const user = AUTH.getCurrentUser();

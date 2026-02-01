@@ -94,6 +94,9 @@
         let quantity = 1;
 
         document.addEventListener('DOMContentLoaded', async () => {
+            // Require login
+            if (!AUTH.requireLogin()) return;
+
             const plantId = sessionStorage.getItem('checkout_plant');
             if (!plantId) {
                 window.location.href = 'index.html';
