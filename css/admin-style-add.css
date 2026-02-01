@@ -1,0 +1,40 @@
+/* Filter Bar */
+.filter-bar {
+    background: #f8f9fa;
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+    border: 1px solid #e9ecef;
+}
+
+.filter-group {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.date-input {
+    width: auto;
+    padding: 0.5rem;
+    border: 1px solid #ced4da;
+    border-radius: 6px;
+    font-family: inherit;
+}
+
+.filter-presets {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.btn-outline {
+    background: transparent;
+    border: 1px solid #2d8a4e;
+    color: #2d8a4e;
+}
+
+.btn-outline:hover {
+    background: #2d8a4e;
+    color: white;
+}
+
+/* Dark mode adjustments if needed, though current request didn't specify dark mode for admin */

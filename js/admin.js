@@ -10,6 +10,14 @@ const ADMIN = {
         if (!AUTH.requireAdmin()) return;
         this.setupEventListeners();
         this.renderDashboard();
+
+        // Set max date to today to prevent future selection
+        const today = new Date().toISOString().split('T')[0];
+        const dateInput = document.getElementById('orderDateFilter');
+        if (dateInput) {
+            dateInput.max = today;
+            // By default showing all (empty value)
+        }
     },
 
     setupEventListeners() {
@@ -18,7 +26,17 @@ const ADMIN = {
         });
     },
 
-    switchTab(tabName) {
+    setDateFilter(type) {
+        const input = document.getElementById('orderDateFilter');
+        if (type === 'today') {
+            input.value = new Date().toISOString().split('T')[0];
+        } else if (type === 'all') {
+            input.value = '';
+        }
+        this.renderOrders();
+    },
+
+    async renderOrders() {
         this.currentTab = tabName;
         document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
         document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
