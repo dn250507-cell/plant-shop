@@ -34,7 +34,7 @@ const ADMIN = {
         if (!this.datePicker) return;
 
         if (type === 'today') {
-            this.datePicker.setDate(new Date(), true);
+            this.datePicker.setDate('today', true);
         } else if (type === 'all') {
             this.datePicker.clear();
             this.renderOrders();
