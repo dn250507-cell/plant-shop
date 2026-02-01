@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fix Admin</title>
+</head>
+
+<body>
+    <h1>Đang khởi tạo tài khoản Admin...</h1>
+    <div id="status">Vui lòng chờ...</div>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+    <script src="js/firebase-config.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const statusDiv = document.getElementById('status');
+
+            try {
+                const db = firebase.firestore();
+                await db.collection('users').doc('admin').set({
+                    id: 'admin',
+                    username: 'admin',
+                    password: 'admin123',
+                    phone: '0999999999',
+                    role: 'admin',
+                    createdAt: new Date().toISOString()
+                });
+
+                statusDiv.innerHTML = `
+                    <h2 style="color: green;">✅ Thành công!</h2>
+                    <p>Tài khoản Admin đã được tạo.</p>
+                    <p>Username: <strong>admin</strong></p>
+                    <p>Password: <strong>admin123</strong></p>
+                    <br>
+                    <a href="login.html">👉 Bấm vào đây để Đăng Nhập</a>
+                `;
+            } catch (error) {
+                statusDiv.innerHTML = `
+                    <h2 style="color: red;">❌ Lỗi: ${error.message}</h2>
+                    <p>Vui lòng kiểm tra lại cấu hình Firebase.</p>
+                `;
+                console.error(error);
+            }
+        });
+    </script>
+</body>
+
+</html>
