@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description"
+    content="Cửa hàng cây giống uy tín - Đa dạng các loại cây cảnh, cây ăn quả, cây phong thủy chất lượng cao">
+  <title>🌿 Cây Giống Việt - Cửa Hàng Cây Giống Uy Tín</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+  <!-- Header -->
+  <header class="header">
+    <div class="header-content">
+      <a href="index.html" class="logo">
+        <span class="logo-icon">🌿</span>
+        <span>Cây Giống Việt</span>
+      </a>
+
+      <nav class="nav">
+        <a href="index.html" class="nav-link active">Trang Chủ</a>
+        <a href="#products" class="nav-link">Sản Phẩm</a>
+        <a href="#contact" class="nav-link">Liên Hệ</a>
+        <a href="admin.html" class="nav-link hidden" id="adminLink">🔧 Quản Trị</a>
+      </nav>
+
+      <div class="header-actions">
+        <div id="authButtons">
+          <a href="login.html" class="btn btn-secondary">Đăng Nhập</a>
+          <a href="register.html" class="btn btn-primary">Đăng Ký</a>
+        </div>
+
+        <div id="userInfo" class="user-info hidden">
+          <div class="user-avatar" id="userInitial">U</div>
+          <span id="userName">User</span>
+          <button class="btn btn-secondary btn-sm" onclick="AUTH.logout()">Đăng Xuất</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="hero-content">
+      <h1 class="hero-title">Cây Giống Chất Lượng<br>Cho Khu Vườn Của Bạn</h1>
+      <p class="hero-subtitle">Chuyên cung cấp các giống cây cảnh, cây ăn quả, cây phong thủy chất lượng cao với giá tốt
+        nhất thị trường.</p>
+      <a href="#products" class="btn btn-primary btn-lg">🌱 Xem Sản Phẩm</a>
+
+      <div class="hero-stats">
+        <div class="stat-item">
+          <div class="stat-value" id="heroPlantCount">50+</div>
+          <div class="stat-label">Loại Cây</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value">1000+</div>
+          <div class="stat-label">Khách Hàng</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value">100%</div>
+          <div class="stat-label">Uy Tín</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Products Section -->
+  <section class="section" id="products">
+    <div class="section-header">
+      <h2 class="section-title">🌿 Cây Giống Nổi Bật</h2>
+      <p class="section-subtitle">Khám phá các loại cây giống chất lượng cao</p>
+    </div>
+
+    <div class="products-grid" id="productsGrid">
+      <!-- Products will be rendered here -->
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer" id="contact">
+    <div class="footer-content">
+      <div class="footer-section">
+        <h4>🌿 Cây Giống Việt</h4>
+        <p>Cửa hàng cây giống uy tín, chất lượng hàng đầu Việt Nam.</p>
+      </div>
+      <div class="footer-section">
+        <h4>Liên Hệ</h4>
+        <p>📞 Hotline: 0856000192</p>
+        <p>📧 Email: nhan093@gmail.com</p>
+        <p>📍 Địa chỉ: Ấp An Hòa, Xã Gò Quao, Tỉnh An Giang</p>
+      </div>
+      <div class="footer-section">
+        <h4>Chính Sách</h4>
+        <a href="#">Chính sách vận chuyển</a>
+        <a href="#">Chính sách đổi trả</a>
+        <a href="#">Hướng dẫn mua hàng</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© 2026 Cây Giống Việt. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script src="js/auth.js"></script>
+  <script src="js/plants.js"></script>
+  <script src="js/cart.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      PLANTS.renderPlants('productsGrid');
+      const count = PLANTS.getPlants().length;
+      document.getElementById('heroPlantCount').textContent = count + '+';
+    });
+  </script>
+</body>
+
+</html>

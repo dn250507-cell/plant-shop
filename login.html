@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng Nhập - Cây Giống Việt</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+    <div class="form-container">
+        <div class="form-card">
+            <div class="form-header">
+                <a href="index.html" class="logo" style="justify-content: center; margin-bottom: 1rem;">
+                    <span class="logo-icon">🌿</span>
+                    <span>Cây Giống Việt</span>
+                </a>
+                <h1 class="form-title">Đăng Nhập</h1>
+                <p class="form-subtitle">Chào mừng bạn trở lại!</p>
+            </div>
+
+            <div id="alertBox" class="alert hidden"></div>
+
+            <form id="loginForm" onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label class="form-label" for="username">Tên tài khoản</label>
+                    <input type="text" id="username" class="form-input" placeholder="Nhập tên tài khoản" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="password">Mật khẩu</label>
+                    <input type="password" id="password" class="form-input" placeholder="Nhập mật khẩu" required>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-lg" style="width: 100%;">
+                    Đăng Nhập
+                </button>
+            </form>
+
+            <div class="form-footer">
+                <p>Chưa có tài khoản? <a href="register.html">Đăng ký ngay</a></p>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/auth.js"></script>
+    <script>
+        function handleLogin(e) {
+            e.preventDefault();
+
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+
+            const result = AUTH.login(username, password);
+            const alertBox = document.getElementById('alertBox');
+
+            if (result.success) {
+                alertBox.className = 'alert alert-success';
+                alertBox.innerHTML = '✓ ' + result.message;
+
+                setTimeout(() => {
+                    if (result.user.role === 'admin') {
+                        window.location.href = 'admin.html';
+                    } else {
+                        window.location.href = 'index.html';
+                    }
+                }, 1000);
+            } else {
+                alertBox.className = 'alert alert-error';
+                alertBox.innerHTML = '✕ ' + result.message;
+            }
+        }
+    </script>
+</body>
+
+</html>

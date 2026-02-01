@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản Trị - Cây Giống Việt</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+    <header class="header">
+        <div class="header-content">
+            <a href="index.html" class="logo">
+                <span class="logo-icon">🌿</span>
+                <span>Cây Giống Việt</span>
+            </a>
+            <nav class="nav">
+                <a href="index.html" class="nav-link">🏠 Trang Chủ</a>
+            </nav>
+            <div class="header-actions">
+                <div class="user-info">
+                    <div class="user-avatar">A</div>
+                    <span>Admin</span>
+                    <button class="btn btn-secondary btn-sm" onclick="AUTH.logout()">Đăng Xuất</button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="admin-container">
+        <div class="admin-header">
+            <h1 class="admin-title">🔧 Bảng Điều Khiển Admin</h1>
+        </div>
+
+        <!-- Tabs -->
+        <div class="admin-tabs">
+            <button class="admin-tab active" data-tab="dashboard">📊 Tổng Quan</button>
+            <button class="admin-tab" data-tab="products">🌱 Quản Lý Cây</button>
+            <button class="admin-tab" data-tab="orders">📦 Đơn Hàng</button>
+            <button class="admin-tab" data-tab="customers">👥 Khách Hàng</button>
+        </div>
+
+        <!-- Dashboard Panel -->
+        <div class="admin-panel" id="panel-dashboard">
+            <div class="dashboard-stats">
+                <div class="stat-card">
+                    <div class="stat-card-icon">📦</div>
+                    <div class="stat-card-value" id="statOrders">0</div>
+                    <div class="stat-card-label">Đơn Hàng</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-icon">💰</div>
+                    <div class="stat-card-value" id="statRevenue">0đ</div>
+                    <div class="stat-card-label">Doanh Thu</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-icon">🌱</div>
+                    <div class="stat-card-value" id="statProducts">0</div>
+                    <div class="stat-card-label">Sản Phẩm</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-icon">👥</div>
+                    <div class="stat-card-value" id="statCustomers">0</div>
+                    <div class="stat-card-label">Khách Hàng</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Products Panel -->
+        <div class="admin-panel admin-panel-hidden" id="panel-products">
+            <div class="flex-between mb-3">
+                <h3>Danh Sách Cây Giống</h3>
+                <button class="btn btn-primary" onclick="ADMIN.openAddModal()">+ Thêm Cây Mới</button>
+            </div>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Ảnh</th>
+                        <th>Tên Cây</th>
+                        <th>Giá</th>
+                        <th>Số Lượng</th>
+                        <th>Thao Tác</th>
+                    </tr>
+                </thead>
+                <tbody id="productsTableBody"></tbody>
+            </table>
+        </div>
+
+        <!-- Orders Panel -->
+        <div class="admin-panel admin-panel-hidden" id="panel-orders">
+            <h3 class="mb-3">Danh Sách Đơn Hàng</h3>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Mã Đơn</th>
+                        <th>Khách Hàng</th>
+                        <th>Sản Phẩm</th>
+                        <th>Tổng Tiền</th>
+                        <th>Trạng Thái</th>
+                        <th>Ngày Đặt</th>
+                        <th>Cập Nhật</th>
+                    </tr>
+                </thead>
+                <tbody id="ordersTableBody"></tbody>
+            </table>
+        </div>
+
+        <!-- Customers Panel -->
+        <div class="admin-panel admin-panel-hidden" id="panel-customers">
+            <h3 class="mb-3">Danh Sách Khách Hàng</h3>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Tên TK</th>
+                        <th>SĐT</th>
+                        <th>Số Đơn</th>
+                        <th>Ngày Đăng Ký</th>
+                    </tr>
+                </thead>
+                <tbody id="customersTableBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Add/Edit Plant Modal -->
+    <div class="modal-overlay" id="plantModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Thêm Cây Mới</h3>
+                <button class="modal-close" onclick="ADMIN.closeModal()">×</button>
+            </div>
+            <form id="plantForm" onsubmit="event.preventDefault(); ADMIN.savePlant();">
+                <div class="form-group">
+                    <label class="form-label" for="plantName">Tên cây *</label>
+                    <input type="text" id="plantName" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="plantDescription">Mô tả</label>
+                    <textarea id="plantDescription" class="form-input" rows="3"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="plantPrice">Giá (VNĐ) *</label>
+                    <input type="number" id="plantPrice" class="form-input" min="0" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="plantStock">Số lượng *</label>
+                    <input type="number" id="plantStock" class="form-input" min="0" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="plantCategory">Danh mục</label>
+                    <select id="plantCategory" class="form-input">
+                        <option value="Cây cảnh">Cây cảnh</option>
+                        <option value="Cây ăn quả">Cây ăn quả</option>
+                        <option value="Cây phong thủy">Cây phong thủy</option>
+                        <option value="Hoa">Hoa</option>
+                        <option value="Khác">Khác</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Ảnh sản phẩm</label>
+                    <div class="image-upload">
+                        <input type="file" accept="image/*" onchange="ADMIN.handleImageUpload(this)">
+                        <div class="image-upload-icon">📷</div>
+                        <div class="image-upload-text">Nhấn để chọn ảnh</div>
+                    </div>
+                    <div id="imagePreview"></div>
+                </div>
+                <div class="flex gap-2" style="margin-top: 1.5rem;">
+                    <button type="button" class="btn btn-secondary" onclick="ADMIN.closeModal()"
+                        style="flex:1">Hủy</button>
+                    <button type="submit" class="btn btn-primary" style="flex:1">Lưu</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/auth.js"></script>
+    <script src="js/plants.js"></script>
+    <script src="js/cart.js"></script>
+    <script src="js/admin.js"></script>
+</body>
+
+</html>

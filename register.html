@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng Ký - Cây Giống Việt</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+    <div class="form-container">
+        <div class="form-card">
+            <div class="form-header">
+                <a href="index.html" class="logo" style="justify-content: center; margin-bottom: 1rem;">
+                    <span class="logo-icon">🌿</span>
+                    <span>Cây Giống Việt</span>
+                </a>
+                <h1 class="form-title">Đăng Ký</h1>
+                <p class="form-subtitle">Tạo tài khoản để mua hàng</p>
+            </div>
+
+            <div id="alertBox" class="alert hidden"></div>
+
+            <form id="registerForm" onsubmit="handleRegister(event)">
+                <div class="form-group">
+                    <label class="form-label" for="phone">Số điện thoại</label>
+                    <input type="tel" id="phone" class="form-input" placeholder="Nhập số điện thoại" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="username">Tên tài khoản</label>
+                    <input type="text" id="username" class="form-input" placeholder="Nhập tên tài khoản" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="password">Mật khẩu</label>
+                    <input type="password" id="password" class="form-input"
+                        placeholder="Nhập mật khẩu (ít nhất 6 ký tự)" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="confirmPassword">Xác nhận mật khẩu</label>
+                    <input type="password" id="confirmPassword" class="form-input" placeholder="Nhập lại mật khẩu"
+                        required>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-lg" style="width: 100%;">
+                    Đăng Ký
+                </button>
+            </form>
+
+            <div class="form-footer">
+                <p>Đã có tài khoản? <a href="login.html">Đăng nhập</a></p>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/auth.js"></script>
+    <script>
+        function handleRegister(e) {
+            e.preventDefault();
+
+            const phone = document.getElementById('phone').value.trim();
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+
+            const alertBox = document.getElementById('alertBox');
+
+            if (password !== confirmPassword) {
+                alertBox.className = 'alert alert-error';
+                alertBox.innerHTML = '✕ Mật khẩu xác nhận không khớp';
+                return;
+            }
+
+            const result = AUTH.register(phone, username, password);
+
+            if (result.success) {
+                alertBox.className = 'alert alert-success';
+                alertBox.innerHTML = '✓ ' + result.message + ' Đang chuyển hướng...';
+
+                setTimeout(() => {
+                    window.location.href = 'login.html';
+                }, 1500);
+            } else {
+                alertBox.className = 'alert alert-error';
+                alertBox.innerHTML = '✕ ' + result.message;
+            }
+        }
+    </script>
+</body>
+
+</html>

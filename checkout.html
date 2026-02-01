@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đặt Hàng - Cây Giống Việt</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+    <header class="header">
+        <div class="header-content">
+            <a href="index.html" class="logo">
+                <span class="logo-icon">🌿</span>
+                <span>Cây Giống Việt</span>
+            </a>
+            <nav class="nav">
+                <a href="index.html" class="nav-link">← Quay lại mua hàng</a>
+            </nav>
+        </div>
+    </header>
+
+    <div class="checkout-container">
+        <h1 style="margin-bottom: 2rem;">🛒 Đặt Hàng</h1>
+
+        <div class="checkout-grid">
+            <!-- Order Form -->
+            <div class="checkout-section">
+                <h2 class="checkout-title">📍 Thông Tin Giao Hàng</h2>
+
+                <div id="alertBox" class="alert hidden"></div>
+
+                <form id="checkoutForm" onsubmit="handleCheckout(event)">
+                    <div class="form-group">
+                        <label class="form-label" for="phone">Số điện thoại *</label>
+                        <input type="tel" id="phone" class="form-input" placeholder="Nhập số điện thoại" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="address">Địa chỉ giao hàng *</label>
+                        <textarea id="address" class="form-input" rows="3" placeholder="Nhập địa chỉ chi tiết"
+                            required></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="note">Ghi chú</label>
+                        <textarea id="note" class="form-input" rows="2"
+                            placeholder="Ghi chú thêm (tùy chọn)"></textarea>
+                    </div>
+
+                    <button type="submit" class="btn btn-accent btn-lg" style="width: 100%; margin-top: 1rem;">
+                        ✓ Xác Nhận Đặt Hàng
+                    </button>
+                </form>
+            </div>
+
+            <!-- Order Summary -->
+            <div class="checkout-section">
+                <h2 class="checkout-title">🌿 Sản Phẩm</h2>
+
+                <div id="cartItems">
+                    <!-- Cart items will be rendered here -->
+                </div>
+
+                <div class="order-summary">
+                    <div class="order-row">
+                        <span>Số lượng</span>
+                        <span id="summaryQuantity">1</span>
+                    </div>
+                    <div class="order-row">
+                        <span>Đơn giá</span>
+                        <span id="summaryPrice">0đ</span>
+                    </div>
+                    <div class="order-row order-total">
+                        <span>Tổng cộng</span>
+                        <span id="summaryTotal">0đ</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/auth.js"></script>
+    <script src="js/plants.js"></script>
+    <script src="js/cart.js"></script>
+    <script>
+        let currentPlant = null;
+        let quantity = 1;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const plantId = sessionStorage.getItem('checkout_plant');
+            if (!plantId) {
+                window.location.href = 'index.html';
+                return;
+            }
+
+            currentPlant = PLANTS.getPlant(plantId);
+            if (!currentPlant) {
+                window.location.href = 'index.html';
+                return;
+            }
+
+            // Pre-fill phone if logged in
+            const user = AUTH.getCurrentUser();
+            if (user && user.phone) {
+                document.getElementById('phone').value = user.phone;
+            }
+
+            renderCartItem();
+        });
+
+        function renderCartItem() {
+            const container = document.getElementById('cartItems');
+            const imageContent = currentPlant.image
+                ? `<img src="${currentPlant.image}" class="cart-item-image">`
+                : '<div class="cart-item-image flex-center">🌿</div>';
+
+            container.innerHTML = `
+        <div class="cart-item">
+          ${imageContent}
+          <div class="cart-item-info">
+            <div class="cart-item-name">${currentPlant.name}</div>
+            <div class="cart-item-price">${PLANTS.formatPrice(currentPlant.price)}</div>
+            <div class="text-muted" style="font-size: 0.875rem;">Còn ${currentPlant.stock} cây</div>
+          </div>
+        </div>
+        <div style="margin-top: 1rem;">
+          <label class="form-label">Số lượng</label>
+          <div class="quantity-control">
+            <button type="button" class="quantity-btn" onclick="changeQuantity(-1)">−</button>
+            <span class="quantity-value" id="quantityDisplay">${quantity}</span>
+            <button type="button" class="quantity-btn" onclick="changeQuantity(1)">+</button>
+          </div>
+        </div>
+      `;
+
+            updateSummary();
+        }
+
+        function changeQuantity(delta) {
+            const newQty = quantity + delta;
+            if (newQty >= 1 && newQty <= currentPlant.stock) {
+                quantity = newQty;
+                document.getElementById('quantityDisplay').textContent = quantity;
+                updateSummary();
+            }
+        }
+
+        function updateSummary() {
+            document.getElementById('summaryQuantity').textContent = quantity;
+            document.getElementById('summaryPrice').textContent = PLANTS.formatPrice(currentPlant.price);
+            document.getElementById('summaryTotal').textContent = PLANTS.formatPrice(currentPlant.price * quantity);
+        }
+
+        function handleCheckout(e) {
+            e.preventDefault();
+
+            const phone = document.getElementById('phone').value.trim();
+            const address = document.getElementById('address').value.trim();
+            const note = document.getElementById('note').value.trim();
+
+            const result = ORDERS.createOrder({
+                plantId: currentPlant.id,
+                quantity: quantity,
+                phone: phone,
+                address: address,
+                note: note
+            });
+
+            const alertBox = document.getElementById('alertBox');
+
+            if (result.success) {
+                alertBox.className = 'alert alert-success';
+                alertBox.innerHTML = '✓ ' + result.message + ' Cảm ơn bạn đã đặt hàng!';
+
+                sessionStorage.removeItem('checkout_plant');
+
+                setTimeout(() => {
+                    window.location.href = 'index.html';
+                }, 2000);
+            } else {
+                alertBox.className = 'alert alert-error';
+                alertBox.innerHTML = '✕ ' + result.message;
+            }
+        }
+    </script>
+</body>
+
+</html>
