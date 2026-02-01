@@ -58,7 +58,13 @@ const ADMIN = {
     },
 
     async renderOrders() {
-        const orders = await ORDERS.getOrders();
+        let orders = await ORDERS.getOrders();
+        const dateFilter = document.getElementById('orderDateFilter').value;
+
+        if (dateFilter) {
+            orders = orders.filter(o => o.createdAt.startsWith(dateFilter));
+        }
+
         const tbody = document.getElementById('ordersTableBody');
 
         tbody.innerHTML = orders.length ? orders.map(o => `
@@ -70,15 +76,29 @@ const ADMIN = {
         <td><span class="status-badge status-${o.status}">${ORDERS.getStatusLabel(o.status)}</span></td>
         <td><small>${ORDERS.formatDate(o.createdAt)}</small></td>
         <td class="actions-cell">
-          <select onchange="ADMIN.updateOrderStatus('${o.id}', this.value)" class="form-input" style="padding:0.5rem">
+          <select onchange="ADMIN.updateOrderStatus('${o.id}', this.value)" class="form-input" style="padding:0.5rem; width: auto; display: inline-block;">
             <option value="pending" ${o.status === 'pending' ? 'selected' : ''}>Chờ xử lý</option>
             <option value="processing" ${o.status === 'processing' ? 'selected' : ''}>Đang xử lý</option>
             <option value="completed" ${o.status === 'completed' ? 'selected' : ''}>Hoàn thành</option>
             <option value="cancelled" ${o.status === 'cancelled' ? 'selected' : ''}>Đã hủy</option>
           </select>
+          <button class="btn btn-secondary btn-sm" style="color:red; border-color:red; margin-left: 0.5rem;" onclick="ADMIN.deleteOrder('${o.id}')">✕</button>
         </td>
       </tr>
     `).join('') : '<tr><td colspan="7" class="text-center text-muted">Chưa có đơn hàng</td></tr>';
+    },
+
+    async deleteOrder(id) {
+        if (confirm('CẢNH BÁO: Bạn có chắc muốn xóa vĩnh viễn đơn hàng này? Hành động này không thể hoàn tác!')) {
+            const result = await ORDERS.deleteOrder(id);
+            if (result.success) {
+                showToast('Đã xóa đơn hàng');
+                this.renderOrders();
+                this.renderDashboard(); // Update stats
+            } else {
+                showToast(result.message, 'error');
+            }
+        }
     },
 
     async renderCustomers() {

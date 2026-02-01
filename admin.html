@@ -89,7 +89,17 @@
 
         <!-- Orders Panel -->
         <div class="admin-panel admin-panel-hidden" id="panel-orders">
-            <h3 class="mb-3">Danh Sách Đơn Hàng</h3>
+            <div class="flex-between mb-3">
+                <h3>Danh Sách Đơn Hàng</h3>
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <label for="orderDateFilter">Lọc theo ngày:</label>
+                    <input type="date" id="orderDateFilter" class="form-input" style="width: auto;"
+                        onchange="ADMIN.renderOrders()">
+                    <button class="btn btn-secondary btn-sm"
+                        onclick="document.getElementById('orderDateFilter').value=''; ADMIN.renderOrders()">Tất
+                        cả</button>
+                </div>
+            </div>
             <table class="data-table">
                 <thead>
                     <tr>

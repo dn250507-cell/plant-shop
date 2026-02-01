@@ -106,6 +106,19 @@ const ORDERS = {
         }
     },
 
+    async deleteOrder(orderId) {
+        try {
+            const user = AUTH.getCurrentUser();
+            if (!user || user.role !== 'admin') return { success: false, message: 'Bạn không có quyền này' };
+
+            await ordersRef.doc(orderId).delete();
+            return { success: true, message: 'Đã xóa đơn hàng' };
+        } catch (error) {
+            console.error('Error deleting order:', error);
+            return { success: false, message: 'Lỗi hệ thống' };
+        }
+    },
+
     async getStats() {
         const orders = await this.getOrders();
         const plants = await PLANTS.getPlants();
@@ -113,7 +126,8 @@ const ORDERS = {
 
         return {
             totalOrders: orders.length,
-            totalRevenue: orders.reduce((sum, o) => sum + o.total, 0),
+            // Only count revenue for completed orders
+            totalRevenue: orders.reduce((sum, o) => (o.status === 'completed' ? sum + o.total : sum), 0),
             pendingOrders: orders.filter(o => o.status === 'pending').length,
             completedOrders: orders.filter(o => o.status === 'completed').length,
             totalProducts: plants.length,
