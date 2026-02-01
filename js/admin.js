@@ -1,5 +1,5 @@
 // ========================================
-// ADMIN PANEL MODULE
+// ADMIN PANEL - FIREBASE VERSION
 // ========================================
 
 const ADMIN = {
@@ -8,8 +8,8 @@ const ADMIN = {
 
     init() {
         if (!AUTH.requireAdmin()) return;
-        this.renderDashboard();
         this.setupEventListeners();
+        this.renderDashboard();
     },
 
     setupEventListeners() {
@@ -31,16 +31,16 @@ const ADMIN = {
         else if (tabName === 'customers') this.renderCustomers();
     },
 
-    renderDashboard() {
-        const stats = ORDERS.getStats();
+    async renderDashboard() {
+        const stats = await ORDERS.getStats();
         document.getElementById('statOrders').textContent = stats.totalOrders;
         document.getElementById('statRevenue').textContent = PLANTS.formatPrice(stats.totalRevenue);
         document.getElementById('statProducts').textContent = stats.totalProducts;
         document.getElementById('statCustomers').textContent = stats.totalCustomers;
     },
 
-    renderProducts() {
-        const plants = PLANTS.getPlants();
+    async renderProducts() {
+        const plants = await PLANTS.getPlants();
         const tbody = document.getElementById('productsTableBody');
 
         tbody.innerHTML = plants.map(p => `
@@ -57,14 +57,14 @@ const ADMIN = {
     `).join('');
     },
 
-    renderOrders() {
-        const orders = ORDERS.getOrders().reverse();
+    async renderOrders() {
+        const orders = await ORDERS.getOrders();
         const tbody = document.getElementById('ordersTableBody');
 
         tbody.innerHTML = orders.length ? orders.map(o => `
       <tr>
         <td><small>${o.id}</small></td>
-        <td><strong>${o.userName}</strong><br><small>${o.phone}</small></td>
+        <td><strong>${o.userName}</strong><br><small>${o.phone}</small><br><small class="text-muted">${o.address}</small></td>
         <td>${o.plantName}<br><small>x${o.quantity}</small></td>
         <td>${PLANTS.formatPrice(o.total)}</td>
         <td><span class="status-badge status-${o.status}">${ORDERS.getStatusLabel(o.status)}</span></td>
@@ -81,21 +81,23 @@ const ADMIN = {
     `).join('') : '<tr><td colspan="7" class="text-center text-muted">Chưa có đơn hàng</td></tr>';
     },
 
-    renderCustomers() {
-        const users = AUTH.getUsers().filter(u => u.role !== 'admin');
+    async renderCustomers() {
+        const users = (await AUTH.getUsers()).filter(u => u.role !== 'admin');
         const tbody = document.getElementById('customersTableBody');
 
-        tbody.innerHTML = users.length ? users.map(u => {
-            const orderCount = ORDERS.getOrdersByUser(u.id).length;
+        const rows = await Promise.all(users.map(async u => {
+            const orders = await ORDERS.getOrdersByUser(u.id);
             return `
         <tr>
           <td><strong>${u.username}</strong></td>
           <td>${u.phone}</td>
-          <td>${orderCount} đơn</td>
+          <td>${orders.length} đơn</td>
           <td><small>${ORDERS.formatDate(u.createdAt)}</small></td>
         </tr>
       `;
-        }).join('') : '<tr><td colspan="4" class="text-center text-muted">Chưa có khách hàng</td></tr>';
+        }));
+
+        tbody.innerHTML = rows.length ? rows.join('') : '<tr><td colspan="4" class="text-center text-muted">Chưa có khách hàng</td></tr>';
     },
 
     openAddModal() {
@@ -106,8 +108,8 @@ const ADMIN = {
         document.getElementById('plantModal').classList.add('active');
     },
 
-    editPlant(id) {
-        const plant = PLANTS.getPlant(id);
+    async editPlant(id) {
+        const plant = await PLANTS.getPlant(id);
         if (!plant) return;
 
         this.editingPlant = id;
@@ -126,7 +128,7 @@ const ADMIN = {
         this.editingPlant = null;
     },
 
-    savePlant() {
+    async savePlant() {
         const data = {
             name: document.getElementById('plantName').value,
             description: document.getElementById('plantDescription').value,
@@ -140,10 +142,10 @@ const ADMIN = {
         if (data.price <= 0) { showToast('Giá tiền phải lớn hơn 0', 'error'); return; }
 
         if (this.editingPlant) {
-            PLANTS.updatePlant(this.editingPlant, data);
+            await PLANTS.updatePlant(this.editingPlant, data);
             showToast('Cập nhật thành công!');
         } else {
-            PLANTS.addPlant(data);
+            await PLANTS.addPlant(data);
             showToast('Thêm cây mới thành công!');
         }
 
@@ -151,16 +153,16 @@ const ADMIN = {
         this.renderProducts();
     },
 
-    deletePlant(id) {
+    async deletePlant(id) {
         if (confirm('Bạn có chắc muốn xóa cây này?')) {
-            PLANTS.deletePlant(id);
+            await PLANTS.deletePlant(id);
             showToast('Đã xóa cây');
             this.renderProducts();
         }
     },
 
-    updateOrderStatus(orderId, status) {
-        ORDERS.updateOrderStatus(orderId, status);
+    async updateOrderStatus(orderId, status) {
+        await ORDERS.updateOrderStatus(orderId, status);
         showToast('Cập nhật trạng thái thành công!');
     },
 

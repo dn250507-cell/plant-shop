@@ -1,75 +1,81 @@
 // ========================================
-// CART & ORDERS MODULE
+// ORDERS MODULE - FIREBASE VERSION
 // ========================================
 
 const ORDERS = {
-    STORAGE_KEY: 'plant_shop_orders',
-
-    getOrders() {
-        const data = localStorage.getItem(this.STORAGE_KEY);
-        return data ? JSON.parse(data) : [];
+    async getOrders() {
+        try {
+            const snapshot = await ordersRef.orderBy('createdAt', 'desc').get();
+            return snapshot.docs.map(doc => doc.data());
+        } catch (error) {
+            console.error('Error getting orders:', error);
+            return [];
+        }
     },
 
-    getOrdersByUser(userId) {
-        return this.getOrders().filter(o => o.userId === userId);
+    async getOrdersByUser(userId) {
+        try {
+            const snapshot = await ordersRef.where('userId', '==', userId).get();
+            return snapshot.docs.map(doc => doc.data());
+        } catch (error) {
+            console.error('Error getting user orders:', error);
+            return [];
+        }
     },
 
-    createOrder(orderData) {
-        const orders = this.getOrders();
-        const plant = PLANTS.getPlant(orderData.plantId);
+    async createOrder(orderData) {
+        const plant = await PLANTS.getPlant(orderData.plantId);
 
         if (!plant) return { success: false, message: 'Không tìm thấy sản phẩm' };
         if (plant.stock < orderData.quantity) return { success: false, message: 'Số lượng trong kho không đủ' };
         if (!orderData.address || !orderData.phone) return { success: false, message: 'Vui lòng điền đầy đủ thông tin' };
         if (orderData.phone.length < 10) return { success: false, message: 'Số điện thoại không hợp lệ' };
 
-        const user = AUTH.getCurrentUser();
-        const newOrder = {
-            id: 'order_' + Date.now(),
-            userId: user ? user.id : 'guest',
-            userName: user ? user.username : 'Khách',
-            plantId: plant.id,
-            plantName: plant.name,
-            plantImage: plant.image,
-            price: plant.price,
-            quantity: orderData.quantity,
-            total: plant.price * orderData.quantity,
-            address: orderData.address,
-            phone: orderData.phone,
-            note: orderData.note || '',
-            status: 'pending',
-            createdAt: new Date().toISOString()
-        };
+        try {
+            const user = AUTH.getCurrentUser();
+            const orderId = 'order_' + Date.now();
 
-        PLANTS.updateStock(plant.id, orderData.quantity);
-        orders.push(newOrder);
-        localStorage.setItem(this.STORAGE_KEY, JSON.stringify(orders));
+            const newOrder = {
+                id: orderId,
+                userId: user ? user.id : 'guest',
+                userName: user ? user.username : 'Khách',
+                plantId: plant.id,
+                plantName: plant.name,
+                plantImage: plant.image,
+                price: plant.price,
+                quantity: orderData.quantity,
+                total: plant.price * orderData.quantity,
+                address: orderData.address,
+                phone: orderData.phone,
+                note: orderData.note || '',
+                status: 'pending',
+                createdAt: new Date().toISOString()
+            };
 
-        return { success: true, message: 'Đặt hàng thành công!', order: newOrder };
+            await PLANTS.updateStock(plant.id, orderData.quantity);
+            await ordersRef.doc(orderId).set(newOrder);
+
+            return { success: true, message: 'Đặt hàng thành công!', order: newOrder };
+        } catch (error) {
+            console.error('Error creating order:', error);
+            return { success: false, message: 'Lỗi hệ thống, vui lòng thử lại' };
+        }
     },
 
-    updateOrderStatus(orderId, status) {
-        const orders = this.getOrders();
-        const index = orders.findIndex(o => o.id === orderId);
-        if (index === -1) return null;
-
-        orders[index].status = status;
-        orders[index].updatedAt = new Date().toISOString();
-        localStorage.setItem(this.STORAGE_KEY, JSON.stringify(orders));
-        return orders[index];
+    async updateOrderStatus(orderId, status) {
+        try {
+            await ordersRef.doc(orderId).update({ status, updatedAt: new Date().toISOString() });
+            return true;
+        } catch (error) {
+            console.error('Error updating order:', error);
+            return false;
+        }
     },
 
-    deleteOrder(orderId) {
-        let orders = this.getOrders();
-        orders = orders.filter(o => o.id !== orderId);
-        localStorage.setItem(this.STORAGE_KEY, JSON.stringify(orders));
-        return true;
-    },
-
-    getStats() {
-        const orders = this.getOrders();
-        const plants = PLANTS.getPlants();
-        const users = AUTH.getUsers();
+    async getStats() {
+        const orders = await this.getOrders();
+        const plants = await PLANTS.getPlants();
+        const users = await AUTH.getUsers();
 
         return {
             totalOrders: orders.length,
