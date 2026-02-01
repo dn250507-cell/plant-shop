@@ -93,26 +93,34 @@
         let currentPlant = null;
         let quantity = 1;
 
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', async () => {
             const plantId = sessionStorage.getItem('checkout_plant');
             if (!plantId) {
                 window.location.href = 'index.html';
                 return;
             }
 
-            currentPlant = PLANTS.getPlant(plantId);
-            if (!currentPlant) {
-                window.location.href = 'index.html';
-                return;
-            }
+            try {
+                // Fetch plant data asynchronously
+                currentPlant = await PLANTS.getPlant(plantId);
 
-            // Pre-fill phone if logged in
-            const user = AUTH.getCurrentUser();
-            if (user && user.phone) {
-                document.getElementById('phone').value = user.phone;
-            }
+                if (!currentPlant) {
+                    alert('Không tìm thấy sản phẩm!');
+                    window.location.href = 'index.html';
+                    return;
+                }
 
-            renderCartItem();
+                // Pre-fill phone if logged in
+                const user = AUTH.getCurrentUser();
+                if (user && user.phone) {
+                    document.getElementById('phone').value = user.phone;
+                }
+
+                renderCartItem();
+            } catch (error) {
+                console.error('Error loading plant:', error);
+                alert('Có lỗi tải dữ liệu sản phẩm');
+            }
         });
 
         function renderCartItem() {
