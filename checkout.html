@@ -38,9 +38,22 @@
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label" for="address">Địa chỉ giao hàng *</label>
-                        <textarea id="address" class="form-input" rows="3" placeholder="Nhập địa chỉ chi tiết"
-                            required></textarea>
+                        <label class="form-label">Địa chỉ giao hàng *</label>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                            <select id="city" class="form-input" required>
+                                <option value="">Chọn Tỉnh/Thành</option>
+                            </select>
+                            <select id="district" class="form-input" required>
+                                <option value="">Chọn Quận/Huyện</option>
+                            </select>
+                        </div>
+                        <div style="margin-bottom: 1rem;">
+                            <select id="ward" class="form-input" required>
+                                <option value="">Chọn Phường/Xã</option>
+                            </select>
+                        </div>
+                        <input type="text" id="street" class="form-input" placeholder="Số nhà, tên đường cụ thể"
+                            required>
                     </div>
 
                     <div class="form-group">
@@ -89,13 +102,22 @@
     <script src="js/auth.js"></script>
     <script src="js/plants.js"></script>
     <script src="js/cart.js"></script>
+
+    <!-- No Google Maps API needed -->
+
     <script>
         let currentPlant = null;
         let quantity = 1;
 
+        // Hosts for the API
+        const PROVINCE_API = 'https://provinces.open-api.vn/api/';
+
         document.addEventListener('DOMContentLoaded', async () => {
             // Require login
             if (!AUTH.requireLogin()) return;
+
+            // Load Province Data
+            loadProvinces();
 
             const plantId = sessionStorage.getItem('checkout_plant');
             if (!plantId) {
@@ -125,6 +147,62 @@
                 alert('Có lỗi tải dữ liệu sản phẩm');
             }
         });
+
+        // ============================
+        // ADDRESS HANDLERS
+        // ============================
+        async function loadProvinces() {
+            try {
+                const response = await fetch(PROVINCE_API + '?depth=1');
+                const data = await response.json();
+                renderOptions('city', data, 'Tỉnh/Thành phố');
+            } catch (e) { console.error('Error loading provinces', e); }
+        }
+
+        async function loadDistricts(provinceCode) {
+            try {
+                const response = await fetch(PROVINCE_API + 'p/' + provinceCode + '?depth=2');
+                const data = await response.json();
+                renderOptions('district', data.districts, 'Quận/Huyện');
+                document.getElementById('ward').innerHTML = '<option value="">Chọn Phường/Xã</option>';
+            } catch (e) { console.error('Error loading districts', e); }
+        }
+
+        async function loadWards(districtCode) {
+            try {
+                const response = await fetch(PROVINCE_API + 'd/' + districtCode + '?depth=2');
+                const data = await response.json();
+                renderOptions('ward', data.wards, 'Phường/Xã');
+            } catch (e) { console.error('Error loading wards', e); }
+        }
+
+        function renderOptions(id, data, label) {
+            const select = document.getElementById(id);
+            let html = `<option value="">Chọn ${label}</option>`;
+            data.forEach(item => {
+                html += `<option value="${item.code}" data-name="${item.name}">${item.name}</option>`;
+            });
+            select.innerHTML = html;
+        }
+
+        // Event Listeners for Dropdowns
+        document.getElementById('city').addEventListener('change', function () {
+            if (this.value) loadDistricts(this.value);
+            else {
+                document.getElementById('district').innerHTML = '<option value="">Chọn Quận/Huyện</option>';
+                document.getElementById('ward').innerHTML = '<option value="">Chọn Phường/Xã</option>';
+            }
+        });
+
+        document.getElementById('district').addEventListener('change', function () {
+            if (this.value) loadWards(this.value);
+            else document.getElementById('ward').innerHTML = '<option value="">Chọn Phường/Xã</option>';
+        });
+
+
+        // ============================
+        // CART LOGIC
+        // ============================
 
         function renderCartItem() {
             const container = document.getElementById('cartItems');
@@ -173,7 +251,24 @@
             e.preventDefault();
 
             const phone = document.getElementById('phone').value.trim();
-            const address = document.getElementById('address').value.trim();
+
+            // Get Address Components
+            const cityEl = document.getElementById('city');
+            const districtEl = document.getElementById('district');
+            const wardEl = document.getElementById('ward');
+            const streetEl = document.getElementById('street');
+
+            const cityName = cityEl.options[cityEl.selectedIndex]?.text;
+            const districtName = districtEl.options[districtEl.selectedIndex]?.text;
+            const wardName = wardEl.options[wardEl.selectedIndex]?.text;
+            const street = streetEl.value.trim();
+
+            if (!cityEl.value || !districtEl.value || !wardEl.value || !street) {
+                alert('Vui lòng chọn đầy đủ địa chỉ (Tỉnh/Huyện/Xã)');
+                return;
+            }
+
+            const fullAddress = `${street}, ${wardName}, ${districtName}, ${cityName}`;
             const note = document.getElementById('note').value.trim();
 
             const btn = e.target.querySelector('button');
@@ -186,7 +281,7 @@
                     plantId: currentPlant.id,
                     quantity: quantity,
                     phone: phone,
-                    address: address,
+                    address: fullAddress,
                     note: note
                 });
 

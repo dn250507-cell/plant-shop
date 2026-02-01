@@ -29,7 +29,7 @@ const ORDERS = {
         if (!plant) return { success: false, message: 'Không tìm thấy sản phẩm' };
         if (plant.stock < orderData.quantity) return { success: false, message: 'Số lượng trong kho không đủ' };
         if (!orderData.address || !orderData.phone) return { success: false, message: 'Vui lòng điền đầy đủ thông tin' };
-        if (orderData.address.length < 15) return { success: false, message: 'Địa chỉ quá ngắn. Vui lòng ghi rõ số nhà, tên đường, xã/phường...' };
+        if (orderData.address.length < 5) return { success: false, message: 'Địa chỉ quá ngắn. Vui lòng ghi rõ số nhà, tên đường...' };
         if (orderData.phone.length < 10) return { success: false, message: 'Số điện thoại không hợp lệ' };
 
         const user = AUTH.getCurrentUser();
@@ -68,6 +68,22 @@ const ORDERS = {
 
     async updateOrderStatus(orderId, status) {
         try {
+            const orderDoc = await ordersRef.doc(orderId).get();
+            if (!orderDoc.exists) return false;
+
+            const order = orderDoc.data();
+            const oldStatus = order.status;
+
+            // If cancelling an order that wasn't already cancelled, refund stock
+            if (status === 'cancelled' && oldStatus !== 'cancelled') {
+                await PLANTS.updateStock(order.plantId, -order.quantity); // Negative quantity adds stock
+                console.log(`Refunded ${order.quantity} stock for plant ${order.plantId}`);
+            }
+            // Optional: If undoing a cancellation, deduct stock again (strict mode)
+            // else if (oldStatus === 'cancelled' && status !== 'cancelled') {
+            //     await PLANTS.updateStock(order.plantId, order.quantity);
+            // }
+
             await ordersRef.doc(orderId).update({ status, updatedAt: new Date().toISOString() });
             return true;
         } catch (error) {
