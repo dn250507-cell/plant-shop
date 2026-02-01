@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chi Tiết Sản Phẩm - Cây Giống Việt</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <a href="index.html" class="logo">
+                <span class="logo-icon">🌿</span>
+                <span>Cây Giống Việt</span>
+            </a>
+
+            <nav class="nav">
+                <a href="index.html" class="nav-link">Trang Chủ</a>
+                <a href="index.html#products" class="nav-link">Sản Phẩm</a>
+                <a href="index.html#contact" class="nav-link">Liên Hệ</a>
+            </nav>
+
+            <div class="header-actions">
+                <!-- Reusing same ID structure for auth to consistency, though auth.js might need to be included -->
+                <div id="authButtons">
+                    <a href="login.html" class="btn btn-secondary">Đăng Nhập</a>
+                    <a href="register.html" class="btn btn-primary">Đăng Ký</a>
+                </div>
+
+                <div id="userInfo" class="user-info hidden">
+                    <div class="user-avatar" id="userInitial">U</div>
+                    <span id="userName">User</span>
+                    <button class="btn btn-secondary btn-sm" onclick="AUTH.logout()">Đăng Xuất</button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Product Detail Section -->
+    <section class="section" style="padding-top: 8rem;">
+        <div id="productDetailContainer" class="product-detail-container">
+            <div class="text-center">
+                <div class="spinner"></div>
+                <p>Đang tải thông tin sản phẩm...</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-section">
+                <h4>🌿 Cây Giống Việt</h4>
+                <p>Cửa hàng cây giống uy tín, chất lượng hàng đầu Việt Nam.</p>
+            </div>
+            <div class="footer-section">
+                <h4>Liên Hệ</h4>
+                <p>📞 Hotline: 0856000192</p>
+                <p>📧 Email: nhan093@gmail.com</p>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>© 2026 Cây Giống Việt. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+    <script src="js/firebase-config.js"></script>
+
+    <script src="js/auth.js"></script>
+    <script src="js/plants.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const plantId = urlParams.get('id');
+
+            if (!plantId) {
+                document.getElementById('productDetailContainer').innerHTML = `
+          <div class="text-center">
+            <h3>Không tìm thấy sản phẩm</h3>
+            <a href="index.html" class="btn btn-primary">Về Trang Chủ</a>
+          </div>
+        `;
+                return;
+            }
+
+            const plant = await PLANTS.getPlant(plantId);
+
+            if (!plant) {
+                document.getElementById('productDetailContainer').innerHTML = `
+          <div class="text-center">
+            <h3>Sản phẩm không tồn tại hoặc đã bị xóa</h3>
+            <a href="index.html" class="btn btn-primary">Về Trang Chủ</a>
+          </div>
+        `;
+                return;
+            }
+
+            const imageContent = plant.image ? `<img src="${plant.image}" alt="${plant.name}">` : '🌿';
+            const stockClass = plant.stock > 10 ? 'text-success' : plant.stock > 0 ? 'text-warning' : 'text-error';
+            const stockText = plant.stock > 0 ? `Còn ${plant.stock} cây` : 'Hết hàng';
+
+            document.title = `${plant.name} - Cây Giống Việt`;
+
+            document.getElementById('productDetailContainer').innerHTML = `
+        <div class="product-detail-grid">
+          <div class="product-detail-image">
+            ${imageContent}
+          </div>
+          <div class="product-detail-info">
+            <span class="product-badge" style="position:static; display:inline-block; margin-bottom: 1rem;">${plant.category}</span>
+            <h1 class="product-detail-title">${plant.name}</h1>
+            <p class="product-detail-price">${PLANTS.formatPrice(plant.price)}</p>
+            
+            <div class="product-detail-stock ${stockClass}">
+              <strong>Tình trạng:</strong> ${stockText}
+            </div>
+
+            <div class="product-detail-description">
+              <h3>Mô tả sản phẩm</h3>
+              <p>${plant.description || 'Chưa có mô tả cho sản phẩm này.'}</p>
+            </div>
+
+            <div class="product-detail-actions">
+              <button class="btn btn-primary btn-lg" onclick="buyNow('${plant.id}')" ${plant.stock === 0 ? 'disabled' : ''}>
+                ${plant.stock > 0 ? 'Mua Ngay' : 'Hết Hàng'}
+              </button>
+              <a href="index.html#products" class="btn btn-secondary btn-lg">Tiếp Tục Mua Sắm</a>
+            </div>
+          </div>
+        </div>
+      `;
+        });
+    </script>
+</body>
+
+</html>

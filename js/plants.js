@@ -114,7 +114,7 @@ const PLANTS = {
             const imageContent = plant.image ? `<img src="${plant.image}" alt="${plant.name}">` : '🌿';
 
             return `
-        <div class="product-card" data-id="${plant.id}">
+        <div class="product-card" data-id="${plant.id}" onclick="window.location.href='product-detail.html?id=${plant.id}'" style="cursor: pointer;">
           ${plant.stock < 10 && plant.stock > 0 ? '<span class="product-badge">Sắp hết</span>' : ''}
           <div class="product-image">${imageContent}</div>
           <div class="product-info">
@@ -125,12 +125,13 @@ const PLANTS = {
                 <div class="product-price">${this.formatPrice(plant.price)}</div>
                 <div class="product-stock ${stockClass}">${stockText}</div>
               </div>
-              <button class="btn btn-primary btn-sm" onclick="buyNow('${plant.id}')" ${plant.stock === 0 ? 'disabled' : ''}>
+              <button class="btn btn-primary btn-sm" onclick="event.stopPropagation(); buyNow('${plant.id}')" ${plant.stock === 0 ? 'disabled' : ''}>
                 ${plant.stock > 0 ? 'Mua ngay' : 'Hết hàng'}
               </button>
             </div>
           </div>
         </div>
+
       `;
         }).join('');
     }
