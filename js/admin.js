@@ -11,12 +11,16 @@ const ADMIN = {
         this.setupEventListeners();
         this.renderDashboard();
 
-        // Set max date to today to prevent future selection
-        const today = new Date().toISOString().split('T')[0];
-        const dateInput = document.getElementById('orderDateFilter');
-        if (dateInput) {
-            dateInput.max = today;
-            // By default showing all (empty value)
+        // Init Flatpickr
+        const input = document.getElementById('orderDateFilter');
+        if (input) {
+            this.datePicker = flatpickr(input, {
+                locale: 'vn',
+                dateFormat: 'Y-m-d',
+                maxDate: 'today',
+                disableMobile: 'true', // Force custom picker on mobile
+                onChange: () => this.renderOrders()
+            });
         }
     },
 
@@ -27,13 +31,14 @@ const ADMIN = {
     },
 
     setDateFilter(type) {
-        const input = document.getElementById('orderDateFilter');
+        if (!this.datePicker) return;
+
         if (type === 'today') {
-            input.value = new Date().toISOString().split('T')[0];
+            this.datePicker.setDate(new Date(), true);
         } else if (type === 'all') {
-            input.value = '';
+            this.datePicker.clear();
+            this.renderOrders();
         }
-        this.renderOrders();
     },
 
     async renderOrders() {

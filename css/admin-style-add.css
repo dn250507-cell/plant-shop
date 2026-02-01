@@ -14,11 +14,14 @@
 }
 
 .date-input {
-    width: auto;
+    width: 200px;
+    /* Wider for text */
     padding: 0.5rem;
     border: 1px solid #ced4da;
     border-radius: 6px;
     font-family: inherit;
+    background-color: white !important;
+    /* Ensure visibility */
 }
 
 .filter-presets {
@@ -37,4 +40,7 @@
     color: white;
 }
 
-/* Dark mode adjustments if needed, though current request didn't specify dark mode for admin */
+/* Flatpickr Customization Override */
+.flatpickr-calendar {
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15) !important;
+}
