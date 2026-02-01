@@ -41,7 +41,7 @@ const ADMIN = {
         }
     },
 
-    async renderOrders() {
+    switchTab(tabName) {
         this.currentTab = tabName;
         document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
         document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
