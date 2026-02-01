@@ -112,10 +112,10 @@
   <script src="js/plants.js"></script>
   <script src="js/cart.js"></script>
   <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      PLANTS.renderPlants('productsGrid');
-      const count = PLANTS.getPlants().length;
-      document.getElementById('heroPlantCount').textContent = count + '+';
+    document.addEventListener('DOMContentLoaded', async () => {
+      await PLANTS.renderPlants('productsGrid');
+      const plants = await PLANTS.getPlants();
+      document.getElementById('heroPlantCount').textContent = plants.length + '+';
     });
   </script>
 </body>
