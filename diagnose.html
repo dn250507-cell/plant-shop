@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kiểm Tra Hệ Thống - Cây Giống Việt</title>
+    <style>
+        body {
+            font-family: monospace;
+            background: #1a1a1a;
+            color: #fff;
+            padding: 2rem;
+            line-height: 1.5;
+        }
+
+        .pass {
+            color: #4eba6f;
+            font-weight: bold;
+        }
+
+        .fail {
+            color: #ff4757;
+            font-weight: bold;
+        }
+
+        .info {
+            color: #f8b500;
+        }
+
+        .box {
+            background: #333;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-top: 1rem;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>🛠️ Công Cụ Chẩn Đoán Hệ Thống</h1>
+    <div id="results">Đang chạy kiểm tra...</div>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+    <script src="js/firebase-config.js"></script>
+
+    <script>
+        const results = document.getElementById('results');
+        function log(msg, type = '') {
+            const div = document.createElement('div');
+            div.innerHTML = type ? `[<span class="${type}">${type.toUpperCase()}</span>] ${msg}` : msg;
+            results.appendChild(div);
+        }
+
+        async function runDiagnostics() {
+            results.innerHTML = '';
+
+            // 1. Check Firebase SDK
+            if (typeof firebase !== 'undefined') {
+                log('Firebase SDK đã được tải', 'pass');
+            } else {
+                log('Không tìm thấy Firebase SDK. Kiểm tra kết nối mạng.', 'fail');
+                return;
+            }
+
+            // 2. Check Config
+            if (firebase.apps.length > 0) {
+                log('Firebase App đã được khởi tạo', 'pass');
+            } else {
+                log('Chưa khởi tạo Firebase Config', 'fail');
+                return;
+            }
+
+            // 3. Test Firestore Connection
+            try {
+                const db = firebase.firestore();
+                log('Đang kết nối đến Database...', 'info');
+
+                // Try simple read
+                const testDoc = await db.collection('users').limit(1).get();
+                log('Kết nối Database thành công!', 'pass');
+
+                // 4. Check Admin Account
+                const adminDoc = await db.collection('users').doc('admin').get();
+                if (adminDoc.exists) {
+                    const data = adminDoc.data();
+                    log(`Đã tìm thấy tài khoản Admin: ${data.username}`, 'pass');
+                    log(`Mật khẩu (đã lưu): ${data.password}`, 'info');
+                } else {
+                    log('Không tìm thấy tài khoản Admin!', 'fail');
+                    log('Đề xuất: Chạy trang fix_admin.html lại.', 'info');
+                }
+
+            } catch (error) {
+                log(`Lỗi kết nối: ${error.message}`, 'fail');
+                log('Gợi ý: Kiểm tra Security Rules trong Firebase Console hoặc kết nối mạng.', 'info');
+            }
+        }
+
+        window.onload = runDiagnostics;
+    </script>
+</body>
+
+</html>
