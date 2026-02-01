@@ -51,29 +51,46 @@
 
     <script src="js/auth.js"></script>
     <script>
-        function handleLogin(e) {
+        async function handleLogin(e) {
             e.preventDefault();
 
             const username = document.getElementById('username').value.trim();
             const password = document.getElementById('password').value;
 
-            const result = AUTH.login(username, password);
-            const alertBox = document.getElementById('alertBox');
+            const btn = e.target.querySelector('button');
+            const originalText = btn.textContent;
+            btn.disabled = true;
+            btn.textContent = 'Đang xử lý...';
 
-            if (result.success) {
-                alertBox.className = 'alert alert-success';
-                alertBox.innerHTML = '✓ ' + result.message;
+            try {
+                const result = await AUTH.login(username, password);
+                const alertBox = document.getElementById('alertBox');
 
-                setTimeout(() => {
-                    if (result.user.role === 'admin') {
-                        window.location.href = 'admin.html';
-                    } else {
-                        window.location.href = 'index.html';
-                    }
-                }, 1000);
-            } else {
-                alertBox.className = 'alert alert-error';
-                alertBox.innerHTML = '✕ ' + result.message;
+                if (result.success) {
+                    alertBox.classList.remove('hidden');
+                    alertBox.className = 'alert alert-success';
+                    alertBox.innerHTML = '✓ ' + result.message;
+
+                    setTimeout(() => {
+                        // Check role specifically
+                        if (result.user && result.user.role === 'admin') {
+                            window.location.href = 'admin.html';
+                        } else {
+                            window.location.href = 'index.html';
+                        }
+                    }, 1000);
+                } else {
+                    alertBox.classList.remove('hidden');
+                    alertBox.className = 'alert alert-error';
+                    alertBox.innerHTML = '✕ ' + result.message;
+                    btn.disabled = false;
+                    btn.textContent = originalText;
+                }
+            } catch (error) {
+                console.error(error);
+                alert('Có lỗi xảy ra: ' + error.message);
+                btn.disabled = false;
+                btn.textContent = originalText;
             }
         }
     </script>

@@ -158,35 +158,50 @@
             document.getElementById('summaryTotal').textContent = PLANTS.formatPrice(currentPlant.price * quantity);
         }
 
-        function handleCheckout(e) {
+        async function handleCheckout(e) {
             e.preventDefault();
 
             const phone = document.getElementById('phone').value.trim();
             const address = document.getElementById('address').value.trim();
             const note = document.getElementById('note').value.trim();
 
-            const result = ORDERS.createOrder({
-                plantId: currentPlant.id,
-                quantity: quantity,
-                phone: phone,
-                address: address,
-                note: note
-            });
+            const btn = e.target.querySelector('button');
+            const originalText = btn.textContent;
+            btn.disabled = true;
+            btn.textContent = 'Đang xử lý...';
 
-            const alertBox = document.getElementById('alertBox');
+            try {
+                const result = await ORDERS.createOrder({
+                    plantId: currentPlant.id,
+                    quantity: quantity,
+                    phone: phone,
+                    address: address,
+                    note: note
+                });
 
-            if (result.success) {
-                alertBox.className = 'alert alert-success';
-                alertBox.innerHTML = '✓ ' + result.message + ' Cảm ơn bạn đã đặt hàng!';
+                const alertBox = document.getElementById('alertBox');
 
-                sessionStorage.removeItem('checkout_plant');
+                if (result.success) {
+                    alertBox.classList.remove('hidden');
+                    alertBox.className = 'alert alert-success';
+                    alertBox.innerHTML = '✓ ' + result.message + ' Cảm ơn bạn đã đặt hàng!';
 
-                setTimeout(() => {
-                    window.location.href = 'index.html';
-                }, 2000);
-            } else {
-                alertBox.className = 'alert alert-error';
-                alertBox.innerHTML = '✕ ' + result.message;
+                    sessionStorage.removeItem('checkout_plant');
+
+                    setTimeout(() => {
+                        window.location.href = 'index.html';
+                    }, 2000);
+                } else {
+                    alertBox.classList.remove('hidden');
+                    alertBox.className = 'alert alert-error';
+                    alertBox.innerHTML = '✕ ' + result.message;
+                    btn.disabled = false;
+                    btn.textContent = originalText;
+                }
+            } catch (error) {
+                console.error(error);
+                btn.disabled = false;
+                btn.textContent = originalText;
             }
         }
     </script>

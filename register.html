@@ -63,7 +63,7 @@
 
     <script src="js/auth.js"></script>
     <script>
-        function handleRegister(e) {
+        async function handleRegister(e) {
             e.preventDefault();
 
             const phone = document.getElementById('phone').value.trim();
@@ -74,23 +74,39 @@
             const alertBox = document.getElementById('alertBox');
 
             if (password !== confirmPassword) {
+                alertBox.classList.remove('hidden');
                 alertBox.className = 'alert alert-error';
                 alertBox.innerHTML = '✕ Mật khẩu xác nhận không khớp';
                 return;
             }
 
-            const result = AUTH.register(phone, username, password);
+            const btn = e.target.querySelector('button');
+            const originalText = btn.textContent;
+            btn.disabled = true;
+            btn.textContent = 'Đang xử lý...';
 
-            if (result.success) {
-                alertBox.className = 'alert alert-success';
-                alertBox.innerHTML = '✓ ' + result.message + ' Đang chuyển hướng...';
+            try {
+                const result = await AUTH.register(phone, username, password);
 
-                setTimeout(() => {
-                    window.location.href = 'login.html';
-                }, 1500);
-            } else {
-                alertBox.className = 'alert alert-error';
-                alertBox.innerHTML = '✕ ' + result.message;
+                if (result.success) {
+                    alertBox.classList.remove('hidden');
+                    alertBox.className = 'alert alert-success';
+                    alertBox.innerHTML = '✓ ' + result.message + ' Đang chuyển hướng...';
+
+                    setTimeout(() => {
+                        window.location.href = 'login.html';
+                    }, 1500);
+                } else {
+                    alertBox.classList.remove('hidden');
+                    alertBox.className = 'alert alert-error';
+                    alertBox.innerHTML = '✕ ' + result.message;
+                    btn.disabled = false;
+                    btn.textContent = originalText;
+                }
+            } catch (error) {
+                console.error(error);
+                btn.disabled = false;
+                btn.textContent = originalText;
             }
         }
     </script>
