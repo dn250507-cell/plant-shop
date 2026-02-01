@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đơn Hàng Của Tôi - Cây Giống Việt</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+    <header class="header">
+        <div class="header-content">
+            <a href="index.html" class="logo">
+                <span class="logo-icon">🌿</span>
+                <span>Cây Giống Việt</span>
+            </a>
+            <nav class="nav">
+                <a href="index.html" class="nav-link">🏠 Trang Chủ</a>
+                <a href="orders.html" class="nav-link active">📦 Đơn Hàng</a>
+            </nav>
+            <div class="header-actions">
+                <div class="user-info">
+                    <span id="userNameDisplay">User</span>
+                    <button class="btn btn-secondary btn-sm" onclick="AUTH.logout()">Đăng Xuất</button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container" style="padding: 2rem 1rem;">
+        <h1 style="margin-bottom: 2rem;">📦 Đơn Hàng Của Tôi</h1>
+
+        <div id="ordersList" class="orders-list">
+            <div class="text-center">Đang tải đơn hàng...</div>
+        </div>
+    </div>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+    <script src="js/firebase-config.js"></script>
+
+    <script src="js/auth.js"></script>
+    <script src="js/plants.js"></script>
+    <script src="js/cart.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Check auth
+            const user = AUTH.getCurrentUser();
+            if (!user) {
+                window.location.href = 'login.html';
+                return;
+            }
+            document.getElementById('userNameDisplay').textContent = user.username;
+
+            await renderOrders(user.id);
+        });
+
+        async function renderOrders(userId) {
+            const container = document.getElementById('ordersList');
+            try {
+                const orders = await ORDERS.getOrdersByUser(userId);
+
+                if (orders.length === 0) {
+                    container.innerHTML = `
+                        <div class="text-center text-muted" style="padding: 4rem;">
+                            <div style="font-size: 3rem; margin-bottom: 1rem;">🕸️</div>
+                            <p>Bạn chưa có đơn hàng nào</p>
+                            <a href="index.html" class="btn btn-primary" style="margin-top: 1rem;">Mua sắm ngay</a>
+                        </div>
+                    `;
+                    return;
+                }
+
+                // Sort by newst
+                orders.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+                container.innerHTML = orders.map(order => {
+                    const date = new Date(order.createdAt);
+                    const now = new Date();
+                    const diffHours = (now - date) / (1000 * 60 * 60);
+                    const canCancel = order.status === 'pending' && diffHours <= 24;
+
+                    // Status styling
+                    let statusClass = 'text-muted';
+                    if (order.status === 'pending') statusClass = 'text-warning';
+                    if (order.status === 'processing') statusClass = 'text-info';
+                    if (order.status === 'completed') statusClass = 'text-success';
+                    if (order.status === 'cancelled') statusClass = 'text-error';
+
+                    return `
+                        <div class="card mb-3" style="display: flex; gap: 1rem; align-items: center; padding: 1rem;">
+                            <div style="width: 80px; height: 80px; flex-shrink: 0;">
+                                ${order.plantImage
+                            ? `<img src="${order.plantImage}" style="width:100%; height:100%; object-fit:cover; border-radius:8px;">`
+                            : '<div style="width:100%; height:100%; background:#eee; display:flex; align-items:center; justify-content:center;">🌿</div>'}
+                            </div>
+                            
+                            <div style="flex: 1;">
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                                    <h3 style="margin: 0; font-size: 1.1rem;">${order.plantName} <small class="text-muted">x${order.quantity}</small></h3>
+                                    <span class="${statusClass}" style="font-weight: bold;">${ORDERS.getStatusLabel(order.status)}</span>
+                                </div>
+                                <div class="text-muted" style="font-size: 0.9rem;">
+                                    <div>Đơn giá: ${PLANTS.formatPrice(order.price)}</div>
+                                    <div>Tổng tiền: <strong class="text-primary">${PLANTS.formatPrice(order.total)}</strong></div>
+                                    <div>Ngày đặt: ${ORDERS.formatDate(order.createdAt)}</div>
+                                </div>
+                            </div>
+
+                             ${canCancel ? `
+                                <button class="btn btn-secondary btn-sm" style="color: #ff4757; border-color: #ff4757;" onclick="handleCancel('${order.id}')">
+                                    Hủy Đơn
+                                </button>
+                            ` : ''}
+                        </div>
+                    `;
+                }).join('');
+
+            } catch (error) {
+                console.error(error);
+                container.innerHTML = '<p class="text-error text-center">Có lỗi tải đơn hàng</p>';
+            }
+        }
+
+        async function handleCancel(orderId) {
+            const btn = event.target;
+            btn.disabled = true;
+            btn.textContent = 'Đang xử lý...';
+
+            const result = await ORDERS.cancelOrder(orderId);
+
+            if (result.success) {
+                alert('✓ ' + result.message);
+                const user = AUTH.getCurrentUser();
+                await renderOrders(user.id); // Reload list
+            } else {
+                alert('✕ ' + result.message);
+                btn.disabled = false;
+                btn.textContent = 'Hủy Đơn';
+            }
+        }
+    </script>
+</body>
+
+</html>

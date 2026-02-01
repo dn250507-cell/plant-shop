@@ -168,9 +168,20 @@ const AUTH = {
             if (adminLink) {
                 adminLink.classList.toggle('hidden', user.role !== 'admin');
             }
+
+            const ordersLink = document.getElementById('ordersLink');
+            if (ordersLink) {
+                ordersLink.classList.remove('hidden');
+            }
         } else {
             authButtons.classList.remove('hidden');
             userInfo.classList.add('hidden');
+
+            const adminLink = document.getElementById('adminLink');
+            if (adminLink) adminLink.classList.add('hidden');
+
+            const ordersLink = document.getElementById('ordersLink');
+            if (ordersLink) ordersLink.classList.add('hidden');
         }
     }
 };

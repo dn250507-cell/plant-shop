@@ -72,6 +72,40 @@ const ORDERS = {
         }
     },
 
+    async cancelOrder(orderId) {
+        try {
+            const user = AUTH.getCurrentUser();
+            if (!user) return { success: false, message: 'Vui lòng đăng nhập' };
+
+            const orderRef = ordersRef.doc(orderId);
+            const doc = await orderRef.get();
+
+            if (!doc.exists) return { success: false, message: 'Đơn hàng không tồn tại' };
+
+            const order = doc.data();
+            if (order.userId !== user.id) return { success: false, message: 'Bạn không có quyền hủy đơn này' };
+            if (order.status !== 'pending') return { success: false, message: 'Chỉ có thể hủy đơn hàng đang chờ xử lý' };
+
+            const orderDate = new Date(order.createdAt);
+            const now = new Date();
+            const diffHours = (now - orderDate) / (1000 * 60 * 60);
+
+            if (diffHours > 24) return { success: false, message: 'Đã quá 24 giờ, không thể hủy đơn' };
+
+            if (confirm('Bạn có chắc muốn hủy đơn hàng này?')) {
+                // Restore stock (negative quantity adds stock back)
+                await PLANTS.updateStock(order.plantId, -order.quantity);
+                await orderRef.update({ status: 'cancelled', updatedAt: new Date().toISOString() });
+                return { success: true, message: 'Đã hủy đơn hàng thành công' };
+            }
+            return { success: false, message: 'Đã hủy thao tác' };
+
+        } catch (error) {
+            console.error('Error cancelling order:', error);
+            return { success: false, message: 'Lỗi hệ thống' };
+        }
+    },
+
     async getStats() {
         const orders = await this.getOrders();
         const plants = await PLANTS.getPlants();
